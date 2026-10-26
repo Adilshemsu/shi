@@ -1,0 +1,2 @@
+@import "tailwindcss";
+@theme { --font-sans: "Noto Sans Ethiopic", "Nyala", system-ui, -apple-system, "Segoe UI", sans-serif; }

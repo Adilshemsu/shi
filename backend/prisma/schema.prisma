@@ -1,0 +1,78 @@
+generator client {
+  provider   = "prisma-client-js"
+  engineType = "client"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Facility {
+  id     Int      @id @default(autoincrement())
+  name   String   @unique
+  visits Visit[]
+}
+
+model Patient {
+  id               Int              @id @default(autoincrement())
+  shiId            String           @unique // NID / SHI ID / Pension ID
+  name             String
+  sex              Sex
+  phone            String?
+  woreda           String?
+  employer         String? // የሚሰራበት ተቋም
+  membershipStatus MembershipStatus
+  visits           Visit[]
+  createdAt        DateTime         @default(now())
+  updatedAt        DateTime         @updatedAt
+}
+
+model Visit {
+  id              Int         @id @default(autoincrement())
+  facilityId      Int
+  facility        Facility    @relation(fields: [facilityId], references: [id])
+  patientId       Int
+  patient         Patient     @relation(fields: [patientId], references: [id])
+  visitDate       DateTime    @db.Date
+  ageAtVisit      Int
+  medicalRecordId String? // የህክምና መለያ ቁጥር
+  serviceType     ServiceType
+  diagnosis       String?
+  labServices     String?
+  imagingServices String?
+  procedures      String?
+  medicines       String?
+
+  // Cost by type (ETB). Stored as Decimal, never float.
+  costConsultation Decimal @default(0) @db.Decimal(12, 2)
+  costLaboratory   Decimal @default(0) @db.Decimal(12, 2)
+  costImaging      Decimal @default(0) @db.Decimal(12, 2)
+  costSurgical     Decimal @default(0) @db.Decimal(12, 2)
+  costMedicine     Decimal @default(0) @db.Decimal(12, 2)
+  costFoodBed      Decimal @default(0) @db.Decimal(12, 2)
+  costOthers       Decimal @default(0) @db.Decimal(12, 2)
+  totalCost        Decimal @default(0) @db.Decimal(12, 2) // ጠቅላላ ድምር, computed on write
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([facilityId, visitDate])
+  @@index([patientId])
+}
+
+enum Sex {
+  M
+  F
+}
+
+enum MembershipStatus {
+  MEMBER
+  BENEFICIARY
+}
+
+enum ServiceType {
+  OPD
+  IPD
+  EM
+}
